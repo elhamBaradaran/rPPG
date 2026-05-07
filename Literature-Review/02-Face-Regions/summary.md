@@ -25,7 +25,7 @@ This document synthesizes findings from two pivotal papers: one focusing on the 
 > [!TIP]
 > This section contains the AI-generated video summaries (using NotebookLM) for both papers to provide a quick visual understanding of their methodologies.
 
-
+https://github.com/user-attachments/assets/38b2a063-352a-4203-bbdd-73037d78e49e
 
 ---
 
