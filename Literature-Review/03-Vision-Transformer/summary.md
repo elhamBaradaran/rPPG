@@ -1,3 +1,6 @@
+
+
+
 # Paper Summary: rPPG Estimation: Vision Transformer With 3-D Temporal Central Difference
 
 ## 1. Metadata
@@ -10,6 +13,11 @@
 ## 2. Visual Summary (AI-Generated)
 > [!TIP]
 > This video summary covers the feed-forward integration of 3D-CNNs and ViViTs as explained in the paper.
+
+
+
+https://github.com/user-attachments/assets/c9de7444-7e5c-49cf-9cf3-118dd567108c
+
 
 
 ---
