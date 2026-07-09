@@ -8,14 +8,15 @@ monitoring during human–robot collaboration (the "KEIKO" scenario).
 ## What it does
 
 The system reads the live webcam feed, locates the face, measures the tiny color
-changes in the forehead skin caused by the blood pulse, and turns those changes
+changes in the facial skin caused by the blood pulse, and turns those changes
 into a live heart-rate estimate (in beats per minute) plus a pulse waveform.
 
 The pipeline:
 
 1. Capture the webcam feed (OpenCV).
-2. Detect the face (Haar cascade) and extract a forehead region of interest (ROI).
-3. Average the R, G, B color of the ROI on every frame.
+2. Detect the face (Haar cascade) and extract one or more skin regions of
+   interest (ROIs).
+3. Average the R, G, B color of the ROI(s) on every frame.
 4. Collect the recent color values in a 10-second sliding buffer.
 5. Apply the **POS** algorithm (Plane-Orthogonal-to-Skin, Wang et al., 2017) to
    combine the color channels into a single pulse signal, suppressing lighting
@@ -30,6 +31,15 @@ and no pretrained weights, which makes it a lightweight first baseline. It works
 by projecting the normalized RGB signal onto a plane chosen to be insensitive to
 the skin-tone / lighting direction, isolating the pulse component.
 
+Two versions of the ROI stage are provided:
+
+- **Forehead only** (`heartrate.py`) — measures a single forehead patch.
+- **Forehead + cheeks** (`heartrate_multi_roi.py`) — measures the forehead and
+  both cheeks and averages them with equal weight. Sampling more skin from
+  several regions typically improves the signal-to-noise ratio and gives a
+  steadier reading when the subject is still. It does **not** remove motion
+  sensitivity: large head movement still disturbs all regions at once.
+
 ## Files
 
 The scripts are intentionally kept separate as a step-by-step build-up of the
@@ -37,14 +47,16 @@ pipeline:
 
 | File | Purpose |
 |------|---------|
-| `webcam_test.py` | Open the webcam and display the live feed. |
-| `face_test.py`   | Detect the face and draw a bounding box. |
-| `color_test.py`  | Extract the forehead ROI and print its average color. |
-| `buffer_test.py` | Add a 10-second sliding buffer of color values. |
-| `pos_test.py`    | Apply POS and draw the raw pulse waveform. |
-| `heartrate.py`   | **Full pipeline:** POS + band-pass filter + FFT + live BPM. |
+| `webcam_test.py`         | Open the webcam and display the live feed. |
+| `face_test.py`           | Detect the face and draw a bounding box. |
+| `color_test.py`          | Extract the forehead ROI and print its average color. |
+| `buffer_test.py`         | Add a 10-second sliding buffer of color values. |
+| `pos_test.py`            | Apply POS and draw the raw pulse waveform. |
+| `heartrate.py`           | **Full pipeline (forehead only):** POS + band-pass + FFT + live BPM. |
+| `heartrate_multi_roi.py` | **Full pipeline (forehead + both cheeks):** usually steadier when still. |
 
-`heartrate.py` is the complete demo; the others show each stage in isolation.
+`heartrate.py` and `heartrate_multi_roi.py` are the complete demos; the others
+show each earlier stage in isolation.
 
 ## Requirements
 
@@ -69,11 +81,19 @@ pip install opencv-python numpy scipy
 
 ## Run
 
+Forehead-only demo:
+
 ```bash
 python heartrate.py
 ```
 
-Two windows open: the camera feed with the forehead ROI and live BPM, and the
+Forehead + cheeks demo (usually a steadier reading when still):
+
+```bash
+python heartrate_multi_roi.py
+```
+
+Two windows open: the camera feed with the ROI box(es) and live BPM, and the
 filtered pulse waveform. Sit still, facing the camera in even lighting, and wait
 ~10 seconds for the buffer to fill before the first reading appears. Press `q`
 (with a window focused) to quit.
@@ -83,7 +103,10 @@ filtered pulse waveform. Sit still, facing the camera in even lighting, and wait
 This is an early baseline and its results should be read as such:
 
 - The estimate is **sensitive to head motion and lighting**; it is most reliable
-  when the subject is still and evenly lit.
+  when the subject is still and evenly lit. Under motion the reported BPM can be
+  badly wrong (it may lock onto the motion frequency instead of the pulse).
+- Using forehead + cheeks improves stability when still, but does **not** fix the
+  motion problem.
 - The reading jitters by several BPM between updates.
 - The pipeline currently **assumes a 30 fps camera** rather than measuring the
   true frame rate; the absolute BPM depends on this being correct.
@@ -104,8 +127,9 @@ deep-learning models.
 
 ## References
 
-- W. Wang, A. C. den Brinker, S. Stuijk, G. de Haan, "Algorithmic Principles of
-  Remote PPG," *IEEE Transactions on Biomedical Engineering*, 2017. (POS method)
+- W. Wang, A. C. den Brinker, S. Stuijk, and G. de Haan, "Algorithmic Principles
+  of Remote PPG," *IEEE Transactions on Biomedical Engineering*, vol. 64, no. 7,
+  pp. 1479–1491, 2017. doi:10.1109/TBME.2016.2609282 (POS method)
 
 ## Context
 
