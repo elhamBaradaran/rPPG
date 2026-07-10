@@ -97,6 +97,18 @@ Two windows open: the camera feed with the ROI box(es) and live BPM, and the
 filtered pulse waveform. Sit still, facing the camera in even lighting, and wait
 ~10 seconds for the buffer to fill before the first reading appears. Press `q`
 (with a window focused) to quit.
+## Demo
+
+
+
+
+
+https://github.com/user-attachments/assets/e3506e95-3f59-489f-a5db-f855b2583cf4
+
+
+
+https://github.com/user-attachments/assets/93d7ef82-0775-49cd-9530-12dc0122e42c
+
 
 ## Limitations
 
