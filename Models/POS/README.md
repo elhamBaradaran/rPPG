@@ -102,22 +102,18 @@ filtered pulse waveform. Sit still, facing the camera in even lighting, and wait
 
 
 
+https://github.com/user-attachments/assets/93d7ef82-0775-49cd-9530-12dc0122e42c
 
 https://github.com/user-attachments/assets/e3506e95-3f59-489f-a5db-f855b2583cf4
 
 
 
-https://github.com/user-attachments/assets/93d7ef82-0775-49cd-9530-12dc0122e42c
 
 Both pipelines were recorded live and cross-checked against a Samsung watch used
 as a reference heart-rate monitor. In both recordings the rPPG output settled at
 **~78 BPM** while the watch reported **74 BPM** — a difference of about 4 BPM,
 which is within the expected error range for a classical POS method under good
 conditions (subject still, even lighting).
-
-Note that part of the subject's hair partially covered the edges of the face
-during recording. Because the measurement regions (forehead and cheeks) remained
-on exposed skin, this did not noticeably affect the result.
 
 This is a single informal comparison rather than a controlled evaluation, so it
 confirms that the pipeline produces plausible, close-to-reference readings, but
