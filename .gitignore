@@ -13,5 +13,8 @@ venv/
 *.pth
 *.npy
 
-# Generated outputs
+# Generated run outputs (scripts regenerate these; no need to version them)
 pulse_waveform.png
+waveform_*.png
+windows_*.csv
+faces_*.npy
