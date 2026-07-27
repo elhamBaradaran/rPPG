@@ -70,10 +70,31 @@ def status(dest=DEST):
 
 
 def _find_subject_dirs(root):
-    """Yield every directory that directly contains vid.avi + ground_truth.txt."""
+    """Yield every directory holding EITHER vid.avi or ground_truth.txt.
+
+    Google Drive splits large downloads by size, so a subject's video and its
+    ground truth often land in DIFFERENT zips. We therefore collect whatever
+    pieces we find and let them merge into the same destination folder.
+    """
     for dirpath, _dirnames, filenames in os.walk(root):
-        if "vid.avi" in filenames and "ground_truth.txt" in filenames:
+        if "vid.avi" in filenames or "ground_truth.txt" in filenames:
             yield dirpath
+
+
+def _zip_holds_ubfc(zpath):
+    """Look INSIDE a zip instead of guessing from its filename.
+
+    Google Drive names bulk downloads 'drive-download-<timestamp>-1-005.zip',
+    which says nothing about the contents - so we check the file list instead.
+    Returns True / False, or None if the zip cannot be read (still downloading).
+    """
+    try:
+        with zipfile.ZipFile(zpath) as z:
+            names = z.namelist()
+    except (zipfile.BadZipFile, OSError):
+        return None
+    return any(n.endswith("vid.avi") or n.endswith("ground_truth.txt")
+               for n in names)
 
 
 def _place(subject_dir, dest):
@@ -92,8 +113,10 @@ def _place(subject_dir, dest):
     for f in ("vid.avi", "ground_truth.txt"):
         src = os.path.join(subject_dir, f)
         dst = os.path.join(target, f)
+        if not os.path.isfile(src):
+            continue                      # this zip only had the other piece
         if os.path.isfile(dst) and os.path.getsize(dst) > 0:
-            continue                      # already have it
+            continue                      # already have it from an earlier zip
         shutil.move(src, dst)
         moved.append(f)
     if moved:
@@ -118,29 +141,49 @@ def main():
     os.makedirs(args.dest, exist_ok=True)
     print(f"Looking for UBFC data in: {args.src}")
 
-    # 1) unpack any zip that looks like it holds subject data
+    # 1) unpack every zip whose CONTENTS look like UBFC data
     tmp = os.path.join(args.dest, "_unzip_tmp")
-    for entry in sorted(os.listdir(args.src)):
-        if not entry.lower().endswith(".zip"):
-            continue
-        if not re.search(r"subject|ubfc|dataset", entry, re.IGNORECASE):
-            continue
+    zips = [e for e in sorted(os.listdir(args.src)) if e.lower().endswith(".zip")]
+    print(f"found {len(zips)} zip file(s) to inspect")
+
+    for entry in zips:
         zpath = os.path.join(args.src, entry)
-        print(f"\n-> unpacking {entry} ({os.path.getsize(zpath)/1024**3:.2f} GB)")
+        gb = os.path.getsize(zpath) / 1024 ** 3
+        holds = _zip_holds_ubfc(zpath)
+        if holds is None:
+            print(f"\n-  {entry}: unreadable (still downloading?) - skipped")
+            continue
+        if not holds:
+            print(f"\n-  {entry}: no UBFC data inside - skipped")
+            continue
+
+        free_gb = shutil.disk_usage(args.dest).free / 1024 ** 3
+        if free_gb < gb * 1.5:
+            print(f"\n!  {entry}: only {free_gb:.1f} GB free, need ~{gb*1.5:.1f} GB - stopping")
+            break
+
+        print(f"\n-> unpacking {entry} ({gb:.2f} GB, {free_gb:.1f} GB free)...")
         try:
             os.makedirs(tmp, exist_ok=True)
             with zipfile.ZipFile(zpath) as z:
                 z.extractall(tmp)
-        except zipfile.BadZipFile:
-            print("   ! not a valid zip (still downloading?) - skipped")
+        except (zipfile.BadZipFile, OSError) as e:
+            print(f"   ! extract failed: {e}")
+            shutil.rmtree(tmp, ignore_errors=True)
             continue
+
         found = list(_find_subject_dirs(tmp))
-        if not found:
-            print("   ! no subject folders inside")
+        placed = 0
         for d in found:
-            _place(d, args.dest)
+            if _place(d, args.dest):
+                placed += 1
         shutil.rmtree(tmp, ignore_errors=True)
-        if not args.keep_zips:
+
+        if not found:
+            print("   ! no subject folders inside after all - zip kept")
+            continue
+        # Only remove the download once its contents are safely in place.
+        if not args.keep_zips and placed:
             os.remove(zpath)
             print(f"   (deleted {entry} to free space)")
 

@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "runs": [
+    {
+      "id": "phasenet_ubfc_20260727_182729",
+      "file": "phasenet_ubfc_20260727_182729.json",
+      "created_utc": "2026-07-27T16:27:29+00:00",
+      "model": "PHASE-Net",
+      "dataset": "UBFC-rPPG",
+      "n_subjects": 15,
+      "mae_bpm": 1.875,
+      "rmse_bpm": 3.6732253168728466,
+      "pearson_r": 0.9707088785325052
+    }
+  ]
+}

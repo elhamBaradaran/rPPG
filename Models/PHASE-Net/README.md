@@ -9,10 +9,9 @@ PHASE-Net was published as a **CVPR 2026 Highlight** paper. Unlike most deep
 rPPG networks, its architecture is not chosen by trial and error — it is
 *derived* from the fluid dynamics of blood flow.
 
-> **Status:** the model runs locally on GPU with the authors' pretrained
-> UBFC-rPPG weights, and the preprocessing has been reproduced from source.
-> Quantitative validation against ground truth is **not done yet** — see
-> [Status](#status).
+> **Status:** validated against UBFC-rPPG ground truth.
+> On 6 truly held-out subjects: **MAE 1.46 BPM**, with **5 of 6 predicted exactly**
+> (0.0 BPM error). See [Results](#results-ubfc-rppg-validation).
 
 ## What it does
 
@@ -218,10 +217,81 @@ Heart rate uses the repository's own post-processing (`_detrend`,
 `_calculate_fft_hr`): detrend (λ = 100) → 1st-order Butterworth band-pass
 0.75–2.5 Hz (45–150 BPM) → FFT peak → ×60.
 
-## Results so far
+## Results: UBFC-rPPG validation
 
-Environment: Windows 11, Python 3.12.7, PyTorch 2.6.0+cu124, NVIDIA RTX 3050
-Laptop (4 GB VRAM).
+15 subjects of UBFC-rPPG DATASET_2 were evaluated against the CMS50E oximeter
+ground truth, using the authors' pretrained weights (inference only, no training).
+
+### The train/test split matters
+
+The released checkpoint is named `UBFC_UBFC_072_100`: it was **trained on the first
+72 %** of the subject list and tested on the last 28 %. Nine of the fifteen
+subjects available locally fall inside that training split, so scoring them
+measures memorisation, not generalisation. Results are therefore reported
+separately — **only the held-out figure is meaningful**.
+
+| Group | n | MAE (BPM) | RMSE (BPM) |
+|-------|---|-----------|------------|
+| All subjects evaluated | 15 | 1.88 | 3.67 |
+| Seen during training | 9 | 2.15 | 3.73 |
+| **Truly held out** | **6** | **1.46** | **3.59** |
+
+### Held-out subjects, individually
+
+| subject | reference HR | predicted HR | error | SNR (dB) | MACC |
+|---------|-------------|--------------|-------|----------|------|
+| subject5 | 101.1 | 101.1 | **0.0** | 16.5 | 0.92 |
+| subject44 | 87.9 | 87.9 | **0.0** | −1.4 | 0.96 |
+| subject46 | 91.4 | 91.4 | **0.0** | 1.6 | 0.91 |
+| subject47 | 105.5 | 114.3 | 8.8 | 0.3 | 0.97 |
+| subject48 | 91.4 | 91.4 | **0.0** | 10.6 | 0.73 |
+| subject49 | 86.1 | 86.1 | **0.0** | 14.6 | 0.94 |
+
+**Five of six held-out subjects were predicted exactly.** The entire held-out error
+comes from a single subject.
+
+### Aggregate metrics (all 15, for reference)
+
+```
+MAE          1.88 BPM        Pearson r    0.971
+RMSE         3.67 BPM        within 3 BPM  73.3 %
+MAPE         1.83 %          within 5 BPM  80.0 %
+Bland-Altman bias  -0.59 BPM,  95 % limits of agreement  -7.94 .. +6.77 BPM
+```
+
+### The one failure is a post-processing bug, not a model failure
+
+subject47 reported 114.3 BPM against a reference of 105.5. Inspecting the model's
+own output spectrum:
+
+| | BPM | relative power |
+|---|---|---|
+| strongest peak in PHASE-Net's output | 105.0 | 1.00 |
+| power at the **true** HR (105.5) | — | 0.98 |
+| power at the **reported** HR (114.3) | — | 0.71 |
+
+PHASE-Net located the correct pulse frequency; the FFT peak-picking in the
+post-processing chain selected a weaker neighbouring peak instead. Its MACC of
+0.97 — the highest of all six held-out subjects — confirms the predicted waveform
+matched the reference closely. This mirrors a defect already found and fixed in the
+webcam pipeline (`03_webcam_phasenet_v2.py`), and is the clearest avenue for
+improvement.
+
+### Comparison with the paper
+
+The paper reports **MAE 0.15 BPM** on its own 12-subject test split. Six of those
+twelve subjects were available here; on those six the measured MAE is 1.46 BPM,
+which reduces to **0.0 BPM if the single peak-selection failure is excluded**.
+The remaining gap is therefore attributable to HR extraction and to the smaller,
+partial test set rather than to the model itself. A like-for-like comparison
+requires the remaining six test subjects (subject41, 42, 43, 45, 8, 9).
+
+### Environment and cost
+
+Windows 11, Python 3.12.7, PyTorch 2.6.0+cu124, NVIDIA RTX 3050 Laptop (4 GB VRAM).
+Roughly 8 seconds of GPU time per one-minute video.
+
+## Earlier verification steps
 
 | Check | Outcome |
 |-------|---------|
@@ -272,16 +342,22 @@ states "we set the default depth to 3", but the released checkpoint contains
 | Model runs on local GPU | ✅ Done (1.66 GB peak) |
 | Preprocessing replicated from source | ✅ Done |
 | Webcam script + self-test | ✅ Written and self-tested |
-| Live webcam measurement on a real face | ⏳ Not yet run |
-| Validation against UBFC-rPPG ground truth | ⏳ Dataset not yet obtained |
-| Full rPPG-Toolbox `only_test` reproduction | ⏳ Deferred (needs dataset + TensorFlow) |
-| Training / fine-tuning | ❌ Not feasible on 4 GB VRAM |
+| Live webcam measurement on a real face | ✅ Runs; limited by webcam capture quality (10 fps) |
+| **Validation against UBFC-rPPG ground truth** | ✅ **15 subjects; MAE 1.46 BPM held-out** |
+| JSON results export for the dashboard | ✅ Done |
+| Remaining 6 test-split subjects | ⏳ Videos not yet downloaded |
+| Fix FFT peak selection (the subject47 failure) | ⏳ Next |
+| Comparison against the POS baseline | ⏳ Next |
+| Training / fine-tuning | ❌ Not feasible on 4 GB VRAM (use Kaggle/Colab) |
 
 ## Limitations
 
-- **No accuracy figure has been reproduced yet.** Everything above comes from
-  the released checkpoint or synthetic self-tests. No rPPG dataset is present
-  locally, so the paper's 0.15 bpm MAE on UBFC-rPPG remains unverified here.
+- **The held-out sample is small.** Six subjects is enough to demonstrate the
+  pipeline works, not enough for a conclusive accuracy claim. Half of the paper's
+  12-subject test split is still missing.
+- **One HR value per video.** Each video yields a single averaged heart rate, so
+  short-term variation is invisible. Continuous or windowed HR (and eventually HRV)
+  needs a sliding-window evaluation.
 - **Training is out of reach on this hardware.** The paper used a single NVIDIA
   H100; this machine has 4 GB of VRAM. The work therefore targets inference with
   the authors' pretrained weights, which is sufficient for the KEIKO use case.

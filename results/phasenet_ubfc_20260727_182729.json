@@ -1,0 +1,308 @@
+{
+  "schema_version": "1.0",
+  "run": {
+    "id": "phasenet_ubfc_20260727_182729",
+    "created_utc": "2026-07-27T16:27:29+00:00",
+    "git_commit": "6eb9a14",
+    "environment": {
+      "python": "3.12.7",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "device": "cuda",
+      "torch": "2.6.0+cu124",
+      "cuda_available": 1,
+      "gpu": "NVIDIA GeForce RTX 3050 4GB Laptop GPU",
+      "gpu_memory_gb": 4.0,
+      "numpy": "2.5.0",
+      "scipy": "1.18.0",
+      "cv2": "4.13.0"
+    },
+    "notes": "Inference only - no training. Non-overlapping 128-frame clips, concatenated per video before HR extraction (toolbox convention)."
+  },
+  "model": {
+    "name": "PHASE-Net",
+    "variant": "pretrained (authors' UBFC weights)",
+    "weights_file": "phasenet_ubfc_epoch9.pth",
+    "weights_sha256": "3206d2da888d4efaa451e19712fae9bd7df30d20f02a2c58a10eef9737935a30",
+    "params_total": 3300274,
+    "params_inference_path": 812290,
+    "params_claimed_in_paper": 290000,
+    "config": {
+      "feature_dim": 128,
+      "latent_dim": 32,
+      "hidden_dim": 128,
+      "tcn_layers": 4,
+      "encoder_channels": [
+        16,
+        32,
+        64,
+        128
+      ],
+      "temporal_module": "gated_tcn"
+    },
+    "paper": {
+      "title": "PHASE-Net: Physics-Grounded Harmonic Attention System for Efficient Remote Photoplethysmography Measurement",
+      "arxiv": "2509.24850",
+      "venue": "CVPR 2026 (Highlight)"
+    }
+  },
+  "dataset": {
+    "name": "UBFC-rPPG",
+    "subset": "DATASET_2",
+    "path": "D:\\00-TU-CLAUSTHAL\\keiko-rppg\\UBFC",
+    "fs_hz": 30,
+    "n_subjects_available": 15,
+    "ground_truth": "CMS50E pulse oximeter"
+  },
+  "preprocessing": {
+    "face_detection": "Haar cascade (HC), first frame only",
+    "large_box_coef": 1.5,
+    "resize": [
+      128,
+      128
+    ],
+    "interpolation": "INTER_AREA",
+    "pixel_range": "0-255 (no /255 normalisation, matching the toolbox)",
+    "clip_length": 128,
+    "data_type": "Raw"
+  },
+  "hr_extraction": {
+    "method": "repo calculate_metric_per_video",
+    "steps": [
+      "detrend (lambda=100)",
+      "Butterworth bandpass 0.75-2.5 Hz (45-150 BPM)",
+      "FFT peak"
+    ],
+    "diff_flag": 0
+  },
+  "metrics": {
+    "n_subjects": 15,
+    "mae_bpm": 1.875,
+    "rmse_bpm": 3.6732253168728466,
+    "mape_pct": 1.7364214261877435,
+    "pearson_r": 0.9707088785325052,
+    "bland_altman": {
+      "bias_bpm": -0.5859375,
+      "sd_bpm": 3.753464324738078,
+      "loa_lower_bpm": -7.942727576486632,
+      "loa_upper_bpm": 6.770852576486632
+    },
+    "within_3bpm_pct": 73.33333333333333,
+    "within_5bpm_pct": 80.0,
+    "mean_snr_db": 4.1798921316750395,
+    "mean_macc": 0.9260062199956521
+  },
+  "subjects": [
+    {
+      "id": "subject5",
+      "hr_ref_bpm": 101.07421875,
+      "hr_pred_bpm": 101.07421875,
+      "error_bpm": 0.0,
+      "abs_error_bpm": 0.0,
+      "mean_hr_bpm": 101.07421875,
+      "snr_db": 16.522528955546818,
+      "macc": 0.9249614601686575,
+      "clips": 12,
+      "duration_s": 51.2,
+      "face_detected": 1
+    },
+    {
+      "id": "subject14",
+      "hr_ref_bpm": 70.3125,
+      "hr_pred_bpm": 70.3125,
+      "error_bpm": 0.0,
+      "abs_error_bpm": 0.0,
+      "mean_hr_bpm": 70.3125,
+      "snr_db": 1.486032849942094,
+      "macc": 0.9408650376272509,
+      "clips": 15,
+      "duration_s": 64.0,
+      "face_detected": 1
+    },
+    {
+      "id": "subject15",
+      "hr_ref_bpm": 119.53125,
+      "hr_pred_bpm": 112.5,
+      "error_bpm": -7.03125,
+      "abs_error_bpm": 7.03125,
+      "mean_hr_bpm": 116.015625,
+      "snr_db": -2.9242552716151304,
+      "macc": 0.9437814871795471,
+      "clips": 15,
+      "duration_s": 64.0,
+      "face_detected": 1
+    },
+    {
+      "id": "subject18",
+      "hr_ref_bpm": 128.3203125,
+      "hr_pred_bpm": 124.8046875,
+      "error_bpm": -3.515625,
+      "abs_error_bpm": 3.515625,
+      "mean_hr_bpm": 126.5625,
+      "snr_db": 3.7877340297103324,
+      "macc": 0.941868389676178,
+      "clips": 15,
+      "duration_s": 64.0,
+      "face_detected": 1
+    },
+    {
+      "id": "subject24",
+      "hr_ref_bpm": 94.921875,
+      "hr_pred_bpm": 87.01171875,
+      "error_bpm": -7.91015625,
+      "abs_error_bpm": 7.91015625,
+      "mean_hr_bpm": 90.966796875,
+      "snr_db": -3.2251450356986906,
+      "macc": 0.9449055155820103,
+      "clips": 15,
+      "duration_s": 64.0,
+      "face_detected": 1
+    },
+    {
+      "id": "subject25",
+      "hr_ref_bpm": 113.37890625,
+      "hr_pred_bpm": 113.37890625,
+      "error_bpm": 0.0,
+      "abs_error_bpm": 0.0,
+      "mean_hr_bpm": 113.37890625,
+      "snr_db": 12.560421226395809,
+      "macc": 0.9794955425068061,
+      "clips": 11,
+      "duration_s": 46.9,
+      "face_detected": 1
+    },
+    {
+      "id": "subject27",
+      "hr_ref_bpm": 111.62109375,
+      "hr_pred_bpm": 111.62109375,
+      "error_bpm": 0.0,
+      "abs_error_bpm": 0.0,
+      "mean_hr_bpm": 111.62109375,
+      "snr_db": 4.046267264497975,
+      "macc": 0.9077201244620318,
+      "clips": 11,
+      "duration_s": 46.9,
+      "face_detected": 1
+    },
+    {
+      "id": "subject30",
+      "hr_ref_bpm": 102.83203125,
+      "hr_pred_bpm": 102.83203125,
+      "error_bpm": 0.0,
+      "abs_error_bpm": 0.0,
+      "mean_hr_bpm": 102.83203125,
+      "snr_db": 5.947802827246199,
+      "macc": 0.9221096684450427,
+      "clips": 15,
+      "duration_s": 64.0,
+      "face_detected": 1
+    },
+    {
+      "id": "subject32",
+      "hr_ref_bpm": 116.89453125,
+      "hr_pred_bpm": 116.89453125,
+      "error_bpm": 0.0,
+      "abs_error_bpm": 0.0,
+      "mean_hr_bpm": 116.89453125,
+      "snr_db": 0.4471724172152644,
+      "macc": 0.925625239982769,
+      "clips": 15,
+      "duration_s": 64.0,
+      "face_detected": 1
+    },
+    {
+      "id": "subject35",
+      "hr_ref_bpm": 116.015625,
+      "hr_pred_bpm": 116.89453125,
+      "error_bpm": 0.87890625,
+      "abs_error_bpm": 0.87890625,
+      "mean_hr_bpm": 116.455078125,
+      "snr_db": -1.6270235268190212,
+      "macc": 0.9385168906551096,
+      "clips": 16,
+      "duration_s": 68.3,
+      "face_detected": 1
+    },
+    {
+      "id": "subject44",
+      "hr_ref_bpm": 87.890625,
+      "hr_pred_bpm": 87.890625,
+      "error_bpm": 0.0,
+      "abs_error_bpm": 0.0,
+      "mean_hr_bpm": 87.890625,
+      "snr_db": -1.4378089671276406,
+      "macc": 0.9630638243651479,
+      "clips": 15,
+      "duration_s": 64.0,
+      "face_detected": 1
+    },
+    {
+      "id": "subject46",
+      "hr_ref_bpm": 91.40625,
+      "hr_pred_bpm": 91.40625,
+      "error_bpm": 0.0,
+      "abs_error_bpm": 0.0,
+      "mean_hr_bpm": 91.40625,
+      "snr_db": 1.608562591702728,
+      "macc": 0.912564227033177,
+      "clips": 15,
+      "duration_s": 64.0,
+      "face_detected": 1
+    },
+    {
+      "id": "subject47",
+      "hr_ref_bpm": 105.46875,
+      "hr_pred_bpm": 114.2578125,
+      "error_bpm": 8.7890625,
+      "abs_error_bpm": 8.7890625,
+      "mean_hr_bpm": 109.86328125,
+      "snr_db": 0.34043325951451386,
+      "macc": 0.9660894487475121,
+      "clips": 15,
+      "duration_s": 64.0,
+      "face_detected": 1
+    },
+    {
+      "id": "subject48",
+      "hr_ref_bpm": 91.40625,
+      "hr_pred_bpm": 91.40625,
+      "error_bpm": 0.0,
+      "abs_error_bpm": 0.0,
+      "mean_hr_bpm": 91.40625,
+      "snr_db": 10.61361012388248,
+      "macc": 0.7335271916867023,
+      "clips": 15,
+      "duration_s": 64.0,
+      "face_detected": 1
+    },
+    {
+      "id": "subject49",
+      "hr_ref_bpm": 86.1328125,
+      "hr_pred_bpm": 86.1328125,
+      "error_bpm": 0.0,
+      "abs_error_bpm": 0.0,
+      "mean_hr_bpm": 86.1328125,
+      "snr_db": 14.55204923073187,
+      "macc": 0.9449992518168373,
+      "clips": 15,
+      "duration_s": 64.0,
+      "face_detected": 1
+    }
+  ],
+  "waveforms": {
+    "subject5": "waveforms/phasenet_ubfc_20260727_182729__subject5.json",
+    "subject14": "waveforms/phasenet_ubfc_20260727_182729__subject14.json",
+    "subject15": "waveforms/phasenet_ubfc_20260727_182729__subject15.json",
+    "subject18": "waveforms/phasenet_ubfc_20260727_182729__subject18.json",
+    "subject24": "waveforms/phasenet_ubfc_20260727_182729__subject24.json",
+    "subject25": "waveforms/phasenet_ubfc_20260727_182729__subject25.json",
+    "subject27": "waveforms/phasenet_ubfc_20260727_182729__subject27.json",
+    "subject30": "waveforms/phasenet_ubfc_20260727_182729__subject30.json",
+    "subject32": "waveforms/phasenet_ubfc_20260727_182729__subject32.json",
+    "subject35": "waveforms/phasenet_ubfc_20260727_182729__subject35.json",
+    "subject44": "waveforms/phasenet_ubfc_20260727_182729__subject44.json",
+    "subject46": "waveforms/phasenet_ubfc_20260727_182729__subject46.json",
+    "subject47": "waveforms/phasenet_ubfc_20260727_182729__subject47.json",
+    "subject48": "waveforms/phasenet_ubfc_20260727_182729__subject48.json",
+    "subject49": "waveforms/phasenet_ubfc_20260727_182729__subject49.json"
+  }
+}
