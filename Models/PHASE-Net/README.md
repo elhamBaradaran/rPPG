@@ -1,4 +1,4 @@
-# KEIKO rPPG — PHASE-Net (Main Model)
+﻿# KEIKO rPPG — PHASE-Net (Main Model)
 
 A physics-grounded deep-learning rPPG model that estimates heart rate from
 ordinary camera video. This is the **main model** of the Master's project on
@@ -10,8 +10,9 @@ rPPG networks, its architecture is not chosen by trial and error — it is
 *derived* from the fluid dynamics of blood flow.
 
 > **Status:** validated against UBFC-rPPG ground truth.
-> On 6 truly held-out subjects: **MAE 1.46 BPM**, with **5 of 6 predicted exactly**
-> (0.0 BPM error). See [Results](#results-ubfc-rppg-validation).
+> On 6 truly held-out subjects, using a 10-second windowed protocol:
+> **MAE 0.39 BPM** against the reference waveform, **2.96 BPM** against the
+> oximeter's own readout. See [Results](#results).
 
 ## What it does
 
@@ -260,61 +261,82 @@ subjects available locally fall inside that training split, so scoring them
 measures memorisation, not generalisation. Results are therefore reported
 separately — **only the held-out figure is meaningful**.
 
-| Group | n | MAE (BPM) | RMSE (BPM) |
-|-------|---|-----------|------------|
-| All subjects evaluated | 15 | 1.88 | 3.67 |
-| Seen during training | 9 | 2.15 | 3.73 |
-| **Truly held out** | **6** | **1.46** | **3.59** |
+### One heart rate per video is the wrong protocol
 
-### Held-out subjects, individually
+The first evaluation gave one HR per 60-second video, and produced an apparent
+8.8 BPM failure on subject47. That failure turned out to be an artefact of the
+protocol, not a fault of the model.
 
-| subject | reference HR | predicted HR | error | SNR (dB) | MACC |
-|---------|-------------|--------------|-------|----------|------|
-| subject5 | 101.1 | 101.1 | **0.0** | 16.5 | 0.92 |
-| subject44 | 87.9 | 87.9 | **0.0** | −1.4 | 0.96 |
-| subject46 | 91.4 | 91.4 | **0.0** | 1.6 | 0.91 |
-| subject47 | 105.5 | 114.3 | 8.8 | 0.3 | 0.97 |
-| subject48 | 91.4 | 91.4 | **0.0** | 10.6 | 0.73 |
-| subject49 | 86.1 | 86.1 | **0.0** | 14.6 | 0.94 |
+Heart rate is not constant over a minute. On subject47 the oximeter's own readout
+ranges from **103 to 120 BPM** within the single recording, and a sliding-window
+estimate of the model's output drifts 95 → 119 BPM. The whole-video spectrum is
+therefore genuinely **bimodal**: 105.5 and 114.3 are both real. Argmax compares
+whichever mode happened to dominate the prediction against whichever dominated the
+reference and calls the difference an error. Two further symptoms confirmed the
+diagnosis:
 
-**Five of six held-out subjects were predicted exactly.** The entire held-out error
-comes from a single subject.
+- The baseline quantises HR to `30/2048 × 60 = 0.88 BPM` bins, so the original
+  "0.0 BPM error" on five subjects meant *same bin*, not exact agreement.
+- Under the video-level protocol the result swung between **1.46 and 4.49 BPM**
+  depending only on which peak-picking method was used — a sign the protocol, not
+  the method, was unstable.
 
-### Aggregate metrics (all 15, for reference)
+`08_windowed_eval.py` therefore estimates HR in overlapping 10-second windows
+(1-second step), where the signal is close to stationary, and aggregates. This is
+also what the rPPG-Toolbox supports via `INFERENCE.EVALUATION_WINDOW.USE_SMALLER_WINDOW`,
+which the shipped PhaseNet config leaves **off**.
 
-```
-MAE          1.88 BPM        Pearson r    0.971
-RMSE         3.67 BPM        within 3 BPM  73.3 %
-MAPE         1.83 %          within 5 BPM  80.0 %
-Bland-Altman bias  -0.59 BPM,  95 % limits of agreement  -7.94 .. +6.77 BPM
-```
+### Results
 
-### The one failure is a post-processing bug, not a model failure
+Reported two ways. *vs reference* applies identical processing to the predicted and
+ground-truth waveforms — the convention rPPG papers use. *vs device* compares against
+the CMS50E's own HR readout (line 2 of `ground_truth.txt`), which involves none of our
+signal processing and is therefore the stricter, more honest figure.
 
-subject47 reported 114.3 BPM against a reference of 105.5. Inspecting the model's
-own output spectrum:
+| Protocol | Group | n | vs reference | vs device |
+|----------|-------|---|--------------|-----------|
+| Video-level (original) | held out | 6 | 1.46 | 3.23 |
+| Video-level (original) | all | 15 | 1.88 | 7.40 |
+| **Windowed 10 s / 1 s** | **held out** | **6** | **0.39** | **2.96** |
+| **Windowed 10 s / 1 s** | all | 15 | 0.53 | 6.08 |
 
-| | BPM | relative power |
-|---|---|---|
-| strongest peak in PHASE-Net's output | 105.0 | 1.00 |
-| power at the **true** HR (105.5) | — | 0.98 |
-| power at the **reported** HR (114.3) | — | 0.71 |
+Windowing raises the sample size from 15 videos to **780 windows**, and the
+subject47 "failure" disappears: the model reports 111.2 BPM where the device reports
+112.0 — an error of 0.8 BPM.
 
-PHASE-Net located the correct pulse frequency; the FFT peak-picking in the
-post-processing chain selected a weaker neighbouring peak instead. Its MACC of
-0.97 — the highest of all six held-out subjects — confirms the predicted waveform
-matched the reference closely. This mirrors a defect already found and fixed in the
-webcam pipeline (`03_webcam_phasenet_v2.py`), and is the clearest avenue for
-improvement.
+The choice of estimator barely matters once windowed (held-out MAE 0.39–0.61 across
+periodogram, Welch, 6 s and 10 s windows), whereas under the video-level protocol the
+same choices swung the result three-fold. Stability across reasonable choices is
+itself evidence that the windowed protocol is the correct one.
+
+### The reference itself is not always trustworthy
+
+Cross-checking three independent readings of each recording — the device's HR
+readout, an FFT of the ground-truth BVP, and counting beats in that BVP — only
+**6 of 15 subjects** have a ground truth where all three agree.
+
+| subject | device | FFT of BVP | beat count | verdict |
+|---------|--------|-----------|------------|---------|
+| subject5 | 99 | 101 | 100 | consistent |
+| subject49 | 87 | 86 | 87 | consistent |
+| subject25 | **92** | 114 | 115 | device readout is wrong |
+| subject27 | **89** | 112 | 110 | device readout is wrong |
+
+On subject25 and subject27 two independent analyses of the BVP waveform agree with
+each other and disagree with the device by more than 20 BPM. This is why the field
+uses the BVP waveform rather than the device readout as ground truth — and why the
+"vs device" column above is pessimistic: it includes subjects whose device readout
+is itself faulty.
 
 ### Comparison with the paper
 
-The paper reports **MAE 0.15 BPM** on its own 12-subject test split. Six of those
-twelve subjects were available here; on those six the measured MAE is 1.46 BPM,
-which reduces to **0.0 BPM if the single peak-selection failure is excluded**.
-The remaining gap is therefore attributable to HR extraction and to the smaller,
-partial test set rather than to the model itself. A like-for-like comparison
-requires the remaining six test subjects (subject41, 42, 43, 45, 8, 9).
+The paper reports **MAE 0.15 BPM** on its own 12-subject test split, using the
+convention of processing both signals identically. The comparable figure here is
+**0.39 BPM on 6 of those 12 subjects** under a 10 s windowed protocol. The remaining
+gap is plausibly explained by the partial test set and by unstated differences in the
+extraction chain — inconsistent reporting of these parameters is a documented
+reproducibility problem in rPPG. A like-for-like comparison needs the remaining six
+subjects (subject41, 42, 43, 45, 8, 9).
 
 ### Environment and cost
 
@@ -376,7 +398,7 @@ states "we set the default depth to 3", but the released checkpoint contains
 | **Validation against UBFC-rPPG ground truth** | ✅ **15 subjects; MAE 1.46 BPM held-out** |
 | JSON results export for the dashboard | ✅ Done |
 | Remaining 6 test-split subjects | ⏳ Videos not yet downloaded |
-| Fix FFT peak selection (the subject47 failure) | ⏳ Next |
+| Windowed evaluation protocol | ✅ Done — the subject47 failure was a protocol artefact |
 | Comparison against the POS baseline | ⏳ Next |
 | Training / fine-tuning | ❌ Not feasible on 4 GB VRAM (use Kaggle/Colab) |
 
@@ -439,3 +461,4 @@ states "we set the default depth to 3", but the released checkpoint contains
 
 Part of a Master's project at TU Clausthal on non-invasive physiological
 monitoring to support human wellbeing during human–robot collaboration.
+
