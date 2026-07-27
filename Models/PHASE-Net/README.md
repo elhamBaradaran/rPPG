@@ -112,11 +112,19 @@ fallback inside the same toolbox.
 
 ## Files
 
+Numbered scripts are the main path, in order; the rest are utilities.
+
 | File | Purpose |
 |------|---------|
 | `01_load_phasenet.py` | Build the model, load the pretrained weights, verify every key matches, report parameter counts, and time a GPU forward pass. |
-| `02_webcam_phasenet.py` | **Full demo:** webcam → face crop → PHASE-Net → BPM, plus a saved waveform plot. Includes a `--selftest` mode that needs no webcam. |
-| `PHASE-Net_Report.docx` | The same content as a formatted Word report. |
+| `02_webcam_phasenet.py` | First webcam demo: webcam → face crop → PHASE-Net → BPM. Kept for reference; **prefer v2**. |
+| `03_webcam_phasenet_v2.py` | **Live demo.** Overlapping sliding windows with Hann overlap-add, zero-padded FFT, and an honest confidence verdict from three independent signals. `--selftest` needs no webcam. |
+| `04_ubfc_eval.py` | **The validation.** Scores the model against UBFC-rPPG ground truth and writes both CSV and dashboard JSON. |
+| `results_export.py` | Model-agnostic JSON writer: metrics, Bland-Altman, waveforms, and full run traceability. |
+| `import_ubfc.py` | Unpack UBFC subject folders downloaded from Google Drive into the expected layout. |
+| `fetch_ground_truth.py` | Retrieve `ground_truth.txt` for any subject whose video arrived without it. |
+| `cam_check.py` | Diagnose why a webcam captures below 30 fps (exposure, backend, or display loop). |
+| `PHASE-Net_Report.docx` | An earlier snapshot of this content as a formatted Word report. |
 
 ## Requirements
 
@@ -195,7 +203,29 @@ per clip) and a waveform plot is written to `pulse_waveform.png`. Sit still in
 even lighting. Press `q` to abort.
 
 Useful options: `--seconds 20` (record longer), `--camera 1` (different webcam),
-`--cpu` (force CPU).
+`--cpu` (force CPU). If the reported frame rate is far below 30, run `cam_check.py`
+— the model is trained at 30 fps and a slow camera degrades accuracy.
+
+### Validate against UBFC-rPPG
+
+Obtain UBFC-rPPG DATASET_2 (42 subjects, `subjectN/vid.avi` + `subjectN/ground_truth.txt`).
+Downloading the folders from Google Drive produces zip archives; unpack them with:
+
+```bash
+python import_ubfc.py          # unpack and arrange
+python import_ubfc.py --status # show which subjects are complete
+python fetch_ground_truth.py   # fill in any missing ground_truth.txt
+```
+
+Then score the model:
+
+```bash
+python 04_ubfc_eval.py --data "path/to/UBFC"
+```
+
+Add `--limit 3` to try a few subjects first, or `--delete-after` to remove each
+video once it has been scored (results are kept). Output goes to `ubfc_results.csv`
+and to `results/` as JSON.
 
 ## Preprocessing
 
@@ -372,17 +402,20 @@ states "we set the default depth to 3", but the released checkpoint contains
 
 ## Roadmap
 
-- Run the webcam demo on a real face and cross-check against the Samsung watch
-  reference, as was done for the POS baseline (~78 BPM vs the watch's 74 BPM).
-- Obtain UBFC-rPPG and validate quantitatively against the CMS50E ground truth;
-  attempt to reproduce the reported 0.15 bpm MAE.
-- Compare PHASE-Net against POS under identical conditions, especially **under
-  head motion**, where POS is known to fail — this is the core justification for
-  moving to a deep model.
-- Adapt to the KEIKO setting: longer recordings, subject seated at the
-  collaborative task, and a sliding-window real-time mode.
-- Extend to **heart rate variability (HRV)**, which needs accurate beat-to-beat
-  peak timing rather than an averaged BPM.
+- **Fix FFT peak selection.** The single held-out failure came from picking a
+  weaker spectral peak while the correct one was present at near-full strength.
+  Candidate fixes: harmonic-aware peak scoring, or cross-checking the FFT peak
+  against a peak-counting estimate as `03_webcam_phasenet_v2.py` already does.
+- **Complete the paper's test split** (subject41, 42, 43, 45, 8, 9) for a
+  like-for-like comparison against the reported 0.15 BPM.
+- **Compare against the POS baseline** on the same videos, especially under head
+  motion where POS is known to fail — the core justification for a deep model.
+- **A results dashboard** reading `results/*.json`: Bland-Altman, error vs SNR,
+  and a waveform viewer, so both models can be compared visually.
+- **Adapt to KEIKO**: longer recordings, subject seated at the collaborative
+  task, and a continuous sliding-window mode rather than one HR per video.
+- **Heart rate variability (HRV)**, which needs accurate beat-to-beat peak timing
+  rather than an averaged BPM.
 
 ## References
 
