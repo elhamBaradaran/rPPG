@@ -1,0 +1,389 @@
+{
+  "config": {
+    "data": "D:\\00-TU-CLAUSTHAL\\keiko-rppg\\UBFC",
+    "win": 10.0,
+    "step": 1.0
+  },
+  "methods": [
+    "PHASE-Net",
+    "POS ref",
+    "POS ours"
+  ],
+  "subjects": [
+    {
+      "id": "subject5",
+      "split": "test",
+      "device_hr": 99.0,
+      "methods": {
+        "PHASE-Net": {
+          "median_hr": 99.920654296875,
+          "mae_vs_ref": 0.26157924107142855,
+          "mae_vs_device": 0.9087030319940477,
+          "n_windows": 42
+        },
+        "POS ref": {
+          "median_hr": 99.64599609375,
+          "mae_vs_ref": 0.28512137276785715,
+          "mae_vs_device": 0.7670665922619048,
+          "n_windows": 42
+        },
+        "POS ours": {
+          "median_hr": 99.700927734375,
+          "mae_vs_ref": 0.274658203125,
+          "mae_vs_device": 0.8089192708333334,
+          "n_windows": 42
+        }
+      }
+    },
+    {
+      "id": "subject14",
+      "split": "train",
+      "device_hr": 77.0,
+      "methods": {
+        "PHASE-Net": {
+          "median_hr": 75.25634765625,
+          "mae_vs_ref": 2.1593128551136362,
+          "mae_vs_device": 8.642489346590908,
+          "n_windows": 55
+        },
+        "POS ref": {
+          "median_hr": 74.81689453125,
+          "mae_vs_ref": 2.98828125,
+          "mae_vs_device": 8.541734730113637,
+          "n_windows": 55
+        },
+        "POS ours": {
+          "median_hr": 74.81689453125,
+          "mae_vs_ref": 3.042214133522727,
+          "mae_vs_device": 9.502450284090909,
+          "n_windows": 55
+        }
+      }
+    },
+    {
+      "id": "subject15",
+      "split": "train",
+      "device_hr": 116.0,
+      "methods": {
+        "PHASE-Net": {
+          "median_hr": 117.333984375,
+          "mae_vs_ref": 0.14182350852272727,
+          "mae_vs_device": 1.0992009943181817,
+          "n_windows": 55
+        },
+        "POS ref": {
+          "median_hr": 113.818359375,
+          "mae_vs_ref": 1.7198597301136365,
+          "mae_vs_device": 2.3478515625,
+          "n_windows": 55
+        },
+        "POS ours": {
+          "median_hr": 113.818359375,
+          "mae_vs_ref": 2.9203657670454546,
+          "mae_vs_device": 3.548357599431818,
+          "n_windows": 55
+        }
+      }
+    },
+    {
+      "id": "subject18",
+      "split": "train",
+      "device_hr": 122.0,
+      "methods": {
+        "PHASE-Net": {
+          "median_hr": 123.92578125,
+          "mae_vs_ref": 0.23370916193181818,
+          "mae_vs_device": 1.8690969460227274,
+          "n_windows": 55
+        },
+        "POS ref": {
+          "median_hr": 123.92578125,
+          "mae_vs_ref": 0.4274680397727273,
+          "mae_vs_device": 1.8639389204545456,
+          "n_windows": 55
+        },
+        "POS ours": {
+          "median_hr": 124.1455078125,
+          "mae_vs_ref": 0.43346058238636365,
+          "mae_vs_device": 1.8539513494318183,
+          "n_windows": 55
+        }
+      }
+    },
+    {
+      "id": "subject24",
+      "split": "train",
+      "device_hr": 97.0,
+      "methods": {
+        "PHASE-Net": {
+          "median_hr": 110.41259765625,
+          "mae_vs_ref": 0.3555575284090909,
+          "mae_vs_device": 7.313576027199074,
+          "n_windows": 55
+        },
+        "POS ref": {
+          "median_hr": 109.53369140625,
+          "mae_vs_ref": 3.269930752840909,
+          "mae_vs_device": 7.500045211226852,
+          "n_windows": 55
+        },
+        "POS ours": {
+          "median_hr": 104.3701171875,
+          "mae_vs_ref": 8.501420454545455,
+          "mae_vs_device": 9.100784866898149,
+          "n_windows": 55
+        }
+      }
+    },
+    {
+      "id": "subject25",
+      "split": "train",
+      "device_hr": 92.0,
+      "methods": {
+        "PHASE-Net": {
+          "median_hr": 113.818359375,
+          "mae_vs_ref": 0.11877111486486487,
+          "mae_vs_device": 23.9335277660473,
+          "n_windows": 37
+        },
+        "POS ref": {
+          "median_hr": 114.0380859375,
+          "mae_vs_ref": 1.546993771114865,
+          "mae_vs_device": 22.849741342905407,
+          "n_windows": 37
+        },
+        "POS ours": {
+          "median_hr": 113.26904296875,
+          "mae_vs_ref": 10.834894953547296,
+          "mae_vs_device": 20.12529032939189,
+          "n_windows": 37
+        }
+      }
+    },
+    {
+      "id": "subject27",
+      "split": "train",
+      "device_hr": 89.0,
+      "methods": {
+        "PHASE-Net": {
+          "median_hr": 111.62109375,
+          "mae_vs_ref": 1.4816696579391893,
+          "mae_vs_device": 19.27773173564189,
+          "n_windows": 37
+        },
+        "POS ref": {
+          "median_hr": 92.0654296875,
+          "mae_vs_ref": 22.412109375,
+          "mae_vs_device": 20.71890308277027,
+          "n_windows": 37
+        },
+        "POS ours": {
+          "median_hr": 78.4423828125,
+          "mae_vs_ref": 27.234216638513512,
+          "mae_vs_device": 16.343032094594594,
+          "n_windows": 37
+        }
+      }
+    },
+    {
+      "id": "subject30",
+      "split": "train",
+      "device_hr": 97.0,
+      "methods": {
+        "PHASE-Net": {
+          "median_hr": 100.08544921875,
+          "mae_vs_ref": 0.3196022727272727,
+          "mae_vs_device": 5.581099076704546,
+          "n_windows": 55
+        },
+        "POS ref": {
+          "median_hr": 100.08544921875,
+          "mae_vs_ref": 0.5373313210227273,
+          "mae_vs_device": 5.658061079545455,
+          "n_windows": 55
+        },
+        "POS ours": {
+          "median_hr": 100.1953125,
+          "mae_vs_ref": 2.8424627130681817,
+          "mae_vs_device": 4.388707386363636,
+          "n_windows": 55
+        }
+      }
+    },
+    {
+      "id": "subject32",
+      "split": "train",
+      "device_hr": 107.0,
+      "methods": {
+        "PHASE-Net": {
+          "median_hr": 110.41259765625,
+          "mae_vs_ref": 0.5073686079545454,
+          "mae_vs_device": 3.4560990767045454,
+          "n_windows": 55
+        },
+        "POS ref": {
+          "median_hr": 110.302734375,
+          "mae_vs_ref": 3.541592684659091,
+          "mae_vs_device": 5.969495738636364,
+          "n_windows": 55
+        },
+        "POS ours": {
+          "median_hr": 110.5224609375,
+          "mae_vs_ref": 7.0851828835227275,
+          "mae_vs_device": 9.35546875,
+          "n_windows": 55
+        }
+      }
+    },
+    {
+      "id": "subject35",
+      "split": "train",
+      "device_hr": 106.0,
+      "methods": {
+        "PHASE-Net": {
+          "median_hr": 109.31396484375,
+          "mae_vs_ref": 0.2774513373940678,
+          "mae_vs_device": 2.3289030058262714,
+          "n_windows": 59
+        },
+        "POS ref": {
+          "median_hr": 109.75341796875,
+          "mae_vs_ref": 0.6089032706567796,
+          "mae_vs_device": 2.513208487817797,
+          "n_windows": 59
+        },
+        "POS ours": {
+          "median_hr": 109.75341796875,
+          "mae_vs_ref": 0.4189701403601695,
+          "mae_vs_device": 2.3817201403601698,
+          "n_windows": 59
+        }
+      }
+    },
+    {
+      "id": "subject44",
+      "split": "test",
+      "device_hr": 82.0,
+      "methods": {
+        "PHASE-Net": {
+          "median_hr": 80.09033203125,
+          "mae_vs_ref": 0.6172318892045454,
+          "mae_vs_device": 5.4112926136363635,
+          "n_windows": 55
+        },
+        "POS ref": {
+          "median_hr": 78.22265625,
+          "mae_vs_ref": 3.3038884943181817,
+          "mae_vs_device": 4.99169921875,
+          "n_windows": 55
+        },
+        "POS ours": {
+          "median_hr": 78.33251953125,
+          "mae_vs_ref": 8.37158203125,
+          "mae_vs_device": 10.076331676136364,
+          "n_windows": 55
+        }
+      }
+    },
+    {
+      "id": "subject46",
+      "split": "test",
+      "device_hr": 97.0,
+      "methods": {
+        "PHASE-Net": {
+          "median_hr": 94.2626953125,
+          "mae_vs_ref": 0.35356001420454547,
+          "mae_vs_device": 1.6589683948863638,
+          "n_windows": 55
+        },
+        "POS ref": {
+          "median_hr": 93.8232421875,
+          "mae_vs_ref": 0.7151100852272727,
+          "mae_vs_device": 1.2936008522727274,
+          "n_windows": 55
+        },
+        "POS ours": {
+          "median_hr": 94.7021484375,
+          "mae_vs_ref": 1.4462002840909092,
+          "mae_vs_device": 1.3388245738636364,
+          "n_windows": 55
+        }
+      }
+    },
+    {
+      "id": "subject47",
+      "split": "test",
+      "device_hr": 112.0,
+      "methods": {
+        "PHASE-Net": {
+          "median_hr": 111.181640625,
+          "mae_vs_ref": 0.45543323863636365,
+          "mae_vs_device": 4.818832386363637,
+          "n_windows": 55
+        },
+        "POS ref": {
+          "median_hr": 109.423828125,
+          "mae_vs_ref": 0.7151100852272727,
+          "mae_vs_device": 4.971140625000001,
+          "n_windows": 55
+        },
+        "POS ours": {
+          "median_hr": 110.41259765625,
+          "mae_vs_ref": 1.0966352982954546,
+          "mae_vs_device": 5.160815696022729,
+          "n_windows": 55
+        }
+      }
+    },
+    {
+      "id": "subject48",
+      "split": "test",
+      "device_hr": 88.0,
+      "methods": {
+        "PHASE-Net": {
+          "median_hr": 91.51611328125,
+          "mae_vs_ref": 0.4873934659090909,
+          "mae_vs_device": 3.6924165482954545,
+          "n_windows": 55
+        },
+        "POS ref": {
+          "median_hr": 91.07666015625,
+          "mae_vs_ref": 0.40150035511363635,
+          "mae_vs_device": 3.6105184659090908,
+          "n_windows": 55
+        },
+        "POS ours": {
+          "median_hr": 91.07666015625,
+          "mae_vs_ref": 0.3915127840909091,
+          "mae_vs_device": 3.6005308948863637,
+          "n_windows": 55
+        }
+      }
+    },
+    {
+      "id": "subject49",
+      "split": "test",
+      "device_hr": 87.0,
+      "methods": {
+        "PHASE-Net": {
+          "median_hr": 87.12158203125,
+          "mae_vs_ref": 0.16379616477272727,
+          "mae_vs_device": 1.2688387784090909,
+          "n_windows": 55
+        },
+        "POS ref": {
+          "median_hr": 87.2314453125,
+          "mae_vs_ref": 0.6272194602272727,
+          "mae_vs_device": 1.6087180397727272,
+          "n_windows": 55
+        },
+        "POS ours": {
+          "median_hr": 86.90185546875,
+          "mae_vs_ref": 0.4494406960227273,
+          "mae_vs_device": 1.43251953125,
+          "n_windows": 55
+        }
+      }
+    }
+  ]
+}

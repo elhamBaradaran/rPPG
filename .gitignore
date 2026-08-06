@@ -18,3 +18,6 @@ pulse_waveform.png
 waveform_*.png
 windows_*.csv
 faces_*.npy
+
+# Raw webcam recordings - large, and re-recordable
+motion_test*.npz
