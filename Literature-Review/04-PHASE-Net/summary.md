@@ -1,3 +1,7 @@
+
+
+
+
 # Paper Summary: PHASE-Net — Physics-Grounded Harmonic Attention System for Efficient Remote Photoplethysmography Measurement
 
 ## 1. Metadata
@@ -13,7 +17,7 @@
 
 <!-- Upload the NotebookLM video to GitHub (drag it into any issue comment) and paste
      the resulting https://github.com/user-attachments/assets/... link on the line below. -->
-
+https://github.com/user-attachments/assets/089195ce-c8bf-418a-b584-ab0c5fd0b39f
 
 ## 3. Problem Statement
 rPPG accuracy degrades badly under head motion and changing illumination. The authors
