@@ -96,7 +96,7 @@ This is the **main model** for the KEIKO scenario, selected over RhythmFormer be
 - [x] Reproduce the preprocessing from source rather than guessing it
 - [x] Validate against UBFC-rPPG ground truth with a windowed protocol
 - [x] Report held-out subjects separately from those inside the checkpoint's training split
-- [ ] Compare directly against the POS baseline on the same videos
+- [x] Compare directly against the POS baseline on the same videos, same crops, same protocol
 - [ ] Obtain the remaining test-split subjects for a like-for-like comparison with 0.15 BPM
 - [ ] Adapt to continuous monitoring for the KEIKO collaborative task
 
@@ -111,3 +111,10 @@ This is the **main model** for the KEIKO scenario, selected over RhythmFormer be
 3. The shipped config evaluates **one heart rate per video**. Since heart rate varies
    within a minute, that protocol is ill-posed; switching to a 10-second windowed protocol
    changed the held-out MAE from 1.46 to **0.39 BPM**.
+4. Measured against the paper's own convention PHASE-Net beats POS by 2.6×, but against
+   the oximeter's independent readout the two are **tied** (2.96 vs 2.87 BPM). Its real
+   advantage is consistency — a worst case of 2.2 BPM against 22.4 for POS.
+5. Under head motion the model **destabilised badly** (drift 13.4 BPM, spikes to 141)
+   while POS stayed within 1.2 BPM. The likely cause is the static face box the training
+   config specifies, not the architecture — meaning the paper's motion-robustness claim
+   may be **conditional on dynamic face tracking**. Under investigation.

@@ -51,6 +51,53 @@ distinction matters and how the numbers change without it.
 
 ---
 
+## Does the deep model actually beat the classical one?
+
+The whole reason to move from POS to a deep model is robustness. That claim is worth
+testing rather than assuming, so both methods were run on the **same videos, from the
+same face crops, scored with the same windowed protocol**. Only the algorithm differs.
+
+| Method | vs reference waveform | vs oximeter readout | worst case (all 15) |
+|--------|----------------------|--------------------|--------------------|
+| **PHASE-Net** | **0.39 BPM** | 2.96 BPM | **2.2 BPM** |
+| POS — reference implementation | 1.01 | **2.87** | 22.4 |
+| POS — this repository's own | 2.01 | 3.74 | 27.2 |
+
+The result is more interesting than a simple win. By the convention rPPG papers use,
+PHASE-Net is **2.6× better**. But against the oximeter's own readout — a reference that
+touches none of our processing — the two are **statistically tied**. That is not a
+contradiction: PHASE-Net is trained to reproduce the ground-truth waveform, so scoring it
+against that waveform measures it on its own training objective.
+
+Its real advantage is **consistency**: a worst case of 2.2 BPM against 22.4 for POS.
+For patient monitoring, never being badly wrong matters more than a slightly better
+average.
+
+A side result: this repository's hand-built POS is about 30 % worse than the reference
+implementation. The projection maths is identical — what is missing is the 1.6-second
+sliding window from the original paper.
+
+### Under head motion — an open question
+
+A live still → motion → still recording produced the opposite of the expected result:
+
+| Method | still | during motion | drift |
+|--------|-------|--------------|-------|
+| PHASE-Net | 77.9 | 94.8 | **13.4 BPM** |
+| POS | 78.1 | 77.2 | **1.2 BPM** |
+
+Both agree exactly while still, so the model itself is working. PHASE-Net then
+destabilises during motion and stays unstable afterwards. The working hypothesis is the
+**static face box**: detection runs on the first frame only, matching the training
+configuration, so head motion pushes the face out of the crop. PHASE-Net learned spatial
+structure and breaks; POS only averages colour spatially and is unaffected.
+
+If confirmed, the finding is that **PHASE-Net's motion robustness is conditional on the
+face staying inside the crop — dynamic face tracking is essential for KEIKO.** This is
+one recording and remains unverified; the controlled test is the next step.
+
+---
+
 ## Demo
 
 The classical baseline running live on a webcam. The left window tracks the face and
@@ -152,7 +199,8 @@ including the Windows long-path workaround required to clone the upstream reposi
 - [x] PHASE-Net running locally, preprocessing reproduced from source
 - [x] Validation against UBFC-rPPG with clinical agreement statistics (Bland–Altman)
 - [x] Windowed evaluation protocol
-- [ ] Direct comparison of PHASE-Net against POS on identical recordings, under motion
+- [x] Direct comparison of PHASE-Net against POS on identical recordings, under motion
+- [ ] Verify the static-face-box hypothesis, then add dynamic face tracking
 - [ ] Results dashboard reading `results/*.json`
 - [ ] Continuous monitoring adapted to the KEIKO collaborative task
 - [ ] Heart rate variability, which needs beat-to-beat timing rather than an averaged rate

@@ -341,7 +341,89 @@ subjects (subject41, 42, 43, 45, 8, 9).
 ### Environment and cost
 
 Windows 11, Python 3.12.7, PyTorch 2.6.0+cu124, NVIDIA RTX 3050 Laptop (4 GB VRAM).
-Roughly 8 seconds of GPU time per one-minute video.
+Roughly 8 seconds of GPU time per one-minute video. POS, for comparison, needs about
+4.5 seconds per video and no GPU at all.
+
+## Against the POS baseline
+
+`09_pos_baseline.py` computes POS from **exactly the face crops PHASE-Net receives** —
+same Haar box, same 1.5× enlargement, same 128×128 resize — and `10_compare_models.py`
+scores everything with the same 10-second windowed protocol. The only variable is the
+algorithm. Two POS variants are included: the repository's own `POS_WANG` (Wang et al.
+2017 with a 1.6 s sliding window, the implementation the paper compares against) and the
+simplified one written from scratch in [`Models/POS`](../POS).
+
+**Held-out subjects (n = 6):**
+
+| Method | vs reference | worst | vs device | worst |
+|--------|-------------|-------|-----------|-------|
+| **PHASE-Net** | **0.39** | **0.6** | 2.96 | 5.4 |
+| POS — reference | 1.01 | 3.3 | **2.87** | 5.0 |
+| POS — ours | 2.01 | 8.4 | 3.74 | 10.1 |
+
+**All 15 subjects — where the difference in robustness shows:**
+
+| Method | vs reference | worst | vs device | worst |
+|--------|-------------|-------|-----------|-------|
+| **PHASE-Net** | **0.53** | **2.2** | 6.08 | 23.9 |
+| POS — reference | 2.87 | 22.4 | 6.35 | 22.8 |
+| POS — ours | 5.02 | 27.2 | 6.60 | 20.1 |
+
+Three things follow.
+
+**1. The convention flatters the deep model.** Against the reference waveform PHASE-Net is
+2.6× better; against the oximeter's own readout the two are **tied** (2.96 vs 2.87). This
+is not a contradiction. PHASE-Net's training objective is a negative-Pearson loss on the
+ground-truth BVP waveform, so scoring it against that waveform tests it on the very
+target it was optimised for. The device readout is outside that loop.
+
+**2. The real advantage is consistency, not average accuracy.** Across all 15 subjects
+PHASE-Net's worst case is **2.2 BPM** against POS's **22.4**. POS fails outright on some
+subjects (subject27: 22.4 BPM error) where PHASE-Net stays within 1.5. For patient
+monitoring, bounded error matters more than a better mean.
+
+**3. Our own POS costs about 30 % accuracy versus the reference** (3.74 vs 2.87 BPM
+against the device). The projection maths is identical; what is missing is the 1.6-second
+sliding window of the original formulation.
+
+**Caveat:** UBFC subjects are largely still, so this comparison does not test the motion
+robustness that motivates a deep model in the first place.
+
+## Under head motion — an unexpected result
+
+`11_live_motion_test.py` records 90 seconds in three phases — still, head motion, still —
+and displays both methods live. Heart rate barely changes over 90 seconds, so the still
+phases serve as each method's own reference for the middle one, and no oximeter is needed.
+Capture runs in a dedicated thread and was measured at a true **30.0 fps**.
+
+| Method | still HR | during motion | drift | range during motion |
+|--------|---------|--------------|-------|--------------------|
+| PHASE-Net | 77.9 | 94.8 | **13.4** | 75 – 113 |
+| POS | 78.1 | 77.2 | **1.2** | 75 – 80 |
+
+*(smartwatch reference 83 BPM; both baselines sit about 5 BPM below it)*
+
+This is the opposite of the expected result — and the detail that matters is **when** it
+goes wrong. During the first still phase the two methods track each other exactly, so the
+model is working. PHASE-Net then destabilises during motion **and stays unstable into the
+third phase**, with spikes to 139–141 BPM, long after the movement stopped.
+
+**Working hypothesis: the static face box.** Face detection runs on the first frame only
+(`DO_DYNAMIC_DETECTION: False`, matching the training configuration). Head motion pushes
+the face out of that fixed crop, and after moving, the subject does not return to exactly
+the original position. PHASE-Net has learned spatial structure and receives a
+misaligned face; POS only averages colour over the crop and does not care where the face
+sits within it.
+
+If confirmed, the finding is that **PHASE-Net's motion robustness is conditional on the
+face remaining inside the crop, and dynamic face tracking is a prerequisite for the KEIKO
+scenario** — not an optional refinement.
+
+**Not yet verified.** This is one recording of one subject, and the motion was gentle
+enough that POS was probably never seriously challenged. The controlled test is to record
+once while saving a region large enough for the face to move within, then process that
+single recording twice — static box versus dynamic tracking — so that the crop strategy is
+the only variable.
 
 ## Earlier verification steps
 
@@ -394,12 +476,14 @@ states "we set the default depth to 3", but the released checkpoint contains
 | Model runs on local GPU | ✅ Done (1.66 GB peak) |
 | Preprocessing replicated from source | ✅ Done |
 | Webcam script + self-test | ✅ Written and self-tested |
-| Live webcam measurement on a real face | ✅ Runs; limited by webcam capture quality (10 fps) |
-| **Validation against UBFC-rPPG ground truth** | ✅ **15 subjects; MAE 1.46 BPM held-out** |
-| JSON results export for the dashboard | ✅ Done |
-| Remaining 6 test-split subjects | ⏳ Videos not yet downloaded |
+| Live webcam capture at the trained frame rate | ✅ Fixed — 30.0 fps via a dedicated capture thread |
+| **Validation against UBFC-rPPG ground truth** | ✅ **15 subjects; MAE 0.39 BPM held-out** |
 | Windowed evaluation protocol | ✅ Done — the subject47 failure was a protocol artefact |
-| Comparison against the POS baseline | ⏳ Next |
+| JSON results export for the dashboard | ✅ Done |
+| **Comparison against the POS baseline** | ✅ **Done — same crops, same protocol** |
+| **Motion test (still / motion / still)** | ✅ Recorded and analysed — result was unexpected |
+| Static vs dynamic face box, controlled test | ⏳ Next — to explain the motion result |
+| Remaining 6 test-split subjects | ⏳ Videos not yet downloaded |
 | Training / fine-tuning | ❌ Not feasible on 4 GB VRAM (use Kaggle/Colab) |
 
 ## Limitations
@@ -407,31 +491,39 @@ states "we set the default depth to 3", but the released checkpoint contains
 - **The held-out sample is small.** Six subjects is enough to demonstrate the
   pipeline works, not enough for a conclusive accuracy claim. Half of the paper's
   12-subject test split is still missing.
-- **One HR value per video.** Each video yields a single averaged heart rate, so
-  short-term variation is invisible. Continuous or windowed HR (and eventually HRV)
-  needs a sliding-window evaluation.
+- **Face detection runs on the first frame only**, matching the training
+  configuration. Head motion therefore pushes the face out of the crop, and the
+  motion test suggests this is the dominant failure mode — see
+  [the motion result](#under-head-motion--an-unexpected-result). Until dynamic
+  tracking is added, the subject must stay within the initial bounding box.
+- **The motion result rests on a single recording** of a single subject, with
+  gentle movement. It is a lead, not a conclusion.
+- **Only average heart rate, not HRV.** Heart rate variability needs beat-to-beat
+  timing accurate to a few milliseconds; at 30 fps one frame is already 33 ms, so
+  it requires sub-frame peak interpolation and a much cleaner signal than the
+  motion test currently delivers.
 - **Training is out of reach on this hardware.** The paper used a single NVIDIA
   H100; this machine has 4 GB of VRAM. The work therefore targets inference with
   the authors' pretrained weights, which is sufficient for the KEIKO use case.
 - The pretrained weights were trained on **UBFC-rPPG only**, so results on very
   different lighting, skin tones, or camera hardware will be weaker than the
   paper's cross-dataset numbers, which come from models trained on more sources.
-- The webcam script measures the true frame rate and uses it for the BPM
-  calculation, but the model itself was **trained at 30 fps**; a webcam running
-  far from 30 fps will still degrade accuracy.
-- Face detection runs on the **first frame only** (matching training), so the
-  subject must stay roughly within the initial bounding box.
+- The model was **trained at 30 fps**, so a webcam running far from that will
+  degrade accuracy. `cam_check.py` diagnoses this; note that a single-threaded
+  capture loop was measured at 10 fps on hardware that comfortably delivers 30, so
+  check the software before blaming the camera.
 
 ## Roadmap
 
-- **Fix FFT peak selection.** The single held-out failure came from picking a
-  weaker spectral peak while the correct one was present at near-full strength.
-  Candidate fixes: harmonic-aware peak scoring, or cross-checking the FFT peak
-  against a peak-counting estimate as `03_webcam_phasenet_v2.py` already does.
+- **Verify the static-face-box hypothesis.** Record once while saving a region
+  large enough for the face to move within, then process that single recording
+  twice — fixed crop versus dynamic tracking — so the crop strategy is the only
+  variable. Track face displacement over time and check whether it coincides with
+  the PHASE-Net spikes.
+- **If confirmed, add dynamic face tracking** and repeat the motion test. This is
+  probably the single most important change for the KEIKO scenario.
 - **Complete the paper's test split** (subject41, 42, 43, 45, 8, 9) for a
   like-for-like comparison against the reported 0.15 BPM.
-- **Compare against the POS baseline** on the same videos, especially under head
-  motion where POS is known to fail — the core justification for a deep model.
 - **A results dashboard** reading `results/*.json`: Bland-Altman, error vs SNR,
   and a waveform viewer, so both models can be compared visually.
 - **Adapt to KEIKO**: longer recordings, subject seated at the collaborative
