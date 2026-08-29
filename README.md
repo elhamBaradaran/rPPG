@@ -77,24 +77,55 @@ A side result: this repository's hand-built POS is about 30 % worse than the ref
 implementation. The projection maths is identical — what is missing is the 1.6-second
 sliding window from the original paper.
 
-### Under head motion — an open question
+### Under head motion — a controlled experiment
 
-A live still → motion → still recording produced the opposite of the expected result:
+Two single recordings gave contradictory answers about motion robustness, which exposed
+the real problem: the motion intensity was never measured, only described. So the test was
+rebuilt as a dose–response experiment — five conditions, each a still → condition → still
+sandwich carrying its own baseline, with the movement **measured** as the extra
+frame-to-frame image change rather than labelled by eye.
 
-| Method | still | during motion | drift |
-|--------|-------|--------------|-------|
-| PHASE-Net | 77.9 | 94.8 | **13.4 BPM** |
-| POS | 78.1 | 77.2 | **1.2 BPM** |
+| Condition | measured motion | PHASE-Net drift | POS drift |
+|-----------|----------------|----------------|-----------|
+| still (control) | −0.05 | **8.0 BPM** | **6.8 BPM** |
+| talking | 0.29 | 7.8 | 5.9 |
+| mixed movement | 0.55 | 10.5 | 13.7 |
+| slow head turns | 1.04 | 15.5 | 12.9 |
+| fast head turns | 2.88 | 15.4 | 14.1 |
 
-Both agree exactly while still, so the model itself is working. PHASE-Net then
-destabilises during motion and stays unstable afterwards. The working hypothesis is the
-**static face box**: detection runs on the first frame only, matching the training
-configuration, so head motion pushes the face out of the crop. PHASE-Net learned spatial
-structure and breaks; POS only averages colour spatially and is unaffected.
+Three plausible explanations were tested and all three failed:
 
-If confirmed, the finding is that **PHASE-Net's motion robustness is conditional on the
-face staying inside the crop — dynamic face tracking is essential for KEIKO.** This is
-one recording and remains unverified; the controlled test is the next step.
+- **The face leaving the fixed crop** — processing one recording twice, with a fixed box
+  and with per-second face tracking, showed the face never moved more than 21 % of a face
+  width, and displacement correlated with error at **+0.07**, i.e. not at all. Tracking
+  actually made things *worse*, because a re-detected box jitters and injects motion of
+  its own.
+- **Facial appearance change** — talking alters the face continuously without moving it,
+  and cost nothing (7.8 against a control of 8.0).
+- **One method being inherently more robust** — both degrade by about the same factor, and
+  the effect saturates: tripling the motion from slow to fast changes nothing.
+
+**What the experiment did establish** is more useful than what it ruled out. The noise
+floor is **7–8 BPM while sitting perfectly still**; motion roughly doubles it and then
+plateaus. And across all five recordings PHASE-Net's reading stayed within 3.7 BPM of the
+smartwatch reference while POS varied by 13.4 — the same bounded-error advantage the UBFC
+comparison found, reproduced on independent data.
+
+### The finding that reframes the project
+
+```
+UBFC-rPPG, controlled recording        PHASE-Net  0.39 BPM
+this webcam, sitting perfectly still              8.0  BPM
+```
+
+A twenty-fold gap **before any movement is involved**. Several experiments went into
+asking why performance degrades under motion, when the honest answer is that it is already
+twenty times worse than the model's demonstrated capability at rest. Motion merely doubles
+an already poor number.
+
+The bottleneck is therefore **capture quality** — lighting, camera, distance, how much of
+the frame the face fills — not motion robustness, and not the model. That is where the
+next work goes.
 
 ---
 
@@ -200,7 +231,8 @@ including the Windows long-path workaround required to clone the upstream reposi
 - [x] Validation against UBFC-rPPG with clinical agreement statistics (Bland–Altman)
 - [x] Windowed evaluation protocol
 - [x] Direct comparison of PHASE-Net against POS on identical recordings, under motion
-- [ ] Verify the static-face-box hypothesis, then add dynamic face tracking
+- [x] Controlled motion protocol with the movement measured rather than described
+- [ ] Improve capture quality and re-measure the 8 BPM noise floor
 - [ ] Results dashboard reading `results/*.json`
 - [ ] Continuous monitoring adapted to the KEIKO collaborative task
 - [ ] Heart rate variability, which needs beat-to-beat timing rather than an averaged rate

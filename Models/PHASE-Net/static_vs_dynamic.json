@@ -1,0 +1,51 @@
+{
+  "fps": 30.02973737757013,
+  "phases": [
+    "SIT STILL",
+    "MOVE YOUR HEAD",
+    "SIT STILL AGAIN"
+  ],
+  "bounds": [
+    0.0,
+    30.0,
+    60.0,
+    90.0
+  ],
+  "watch_bpm": 83.0,
+  "detect_every": 30,
+  "displacement_px": {
+    "median": 7.415800845306113,
+    "max": 27.668337860316587,
+    "face_width": 131.33085501858736
+  },
+  "displacement_error_correlation": 0.06613234060116967,
+  "results": {
+    "PHASE-Net static": {
+      "still_hr": 78.68509677850864,
+      "motion_hr": 81.26944307381955,
+      "drift": 10.526170761681236,
+      "still_sd": 1.8121868222216382,
+      "motion_sd": 13.831898562683183,
+      "motion_min": 78.1902219560023,
+      "motion_max": 115.03090318703012
+    },
+    "PHASE-Net dynamic": {
+      "still_hr": 77.3104444937688,
+      "motion_hr": 80.11473515463808,
+      "drift": 24.63743468196397,
+      "still_sd": 18.60869630394872,
+      "motion_sd": 25.733629149010216,
+      "motion_min": 57.9553403246318,
+      "motion_max": 121.18934542266462
+    },
+    "POS static": {
+      "still_hr": 78.35518023017109,
+      "motion_hr": 62.68414418413687,
+      "drift": 13.695202495434819,
+      "still_sd": 5.957189910227011,
+      "motion_sd": 11.872057703682342,
+      "motion_min": 45.088594939466866,
+      "motion_max": 88.19769058890836
+    }
+  }
+}

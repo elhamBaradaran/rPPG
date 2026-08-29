@@ -124,6 +124,11 @@ Numbered scripts are the main path, in order; the rest are utilities.
 | `results_export.py` | Model-agnostic JSON writer: metrics, Bland-Altman, waveforms, and full run traceability. |
 | `import_ubfc.py` | Unpack UBFC subject folders downloaded from Google Drive into the expected layout. |
 | `fetch_ground_truth.py` | Retrieve `ground_truth.txt` for any subject whose video arrived without it. |
+| `11_live_motion_test.py` | Live still/motion/still recording with both methods shown side by side. |
+| `12_motion_analysis.py` | Offline analysis of one motion recording. |
+| `13_record_full.py` | Records a condition, saving a region large enough for the face to move within. |
+| `14_static_vs_dynamic.py` | Processes one recording twice - fixed crop versus face tracking. |
+| `15_motion_protocol.py` | **The controlled protocol:** error against measured motion, across conditions. |
 | `cam_check.py` | Diagnose why a webcam captures below 30 fps (exposure, backend, or display loop). |
 | `PHASE-Net_Report.docx` | An earlier snapshot of this content as a formatted Word report. |
 
@@ -403,27 +408,85 @@ Capture runs in a dedicated thread and was measured at a true **30.0 fps**.
 
 *(smartwatch reference 83 BPM; both baselines sit about 5 BPM below it)*
 
-This is the opposite of the expected result — and the detail that matters is **when** it
-goes wrong. During the first still phase the two methods track each other exactly, so the
-model is working. PHASE-Net then destabilises during motion **and stays unstable into the
-third phase**, with spikes to 139–141 BPM, long after the movement stopped.
+This looked like the opposite of the expected result. A second recording then gave the
+reverse ranking (PHASE-Net 10.5, POS 13.7), which showed the real problem: **the motion
+intensity was never measured, only described.** A single recording cannot answer "is it
+robust?" when the thing being varied is uncontrolled.
 
-**Working hypothesis: the static face box.** Face detection runs on the first frame only
-(`DO_DYNAMIC_DETECTION: False`, matching the training configuration). Head motion pushes
-the face out of that fixed crop, and after moving, the subject does not return to exactly
-the original position. PHASE-Net has learned spatial structure and receives a
-misaligned face; POS only averages colour over the crop and does not care where the face
-sits within it.
+## A controlled motion protocol
 
-If confirmed, the finding is that **PHASE-Net's motion robustness is conditional on the
-face remaining inside the crop, and dynamic face tracking is a prerequisite for the KEIKO
-scenario** — not an optional refinement.
+`13_record_full.py` and `15_motion_protocol.py` replace that with a dose–response
+experiment. Five conditions, each recorded as its own still → condition → still sandwich
+so every condition carries its own heart-rate baseline. Crucially the motion is
+**measured, not labelled**: the *motion dose* is the extra mean frame-to-frame pixel
+change during the condition, which registers rotation, illumination shifts, blur and
+speech — everything that face displacement alone misses.
 
-**Not yet verified.** This is one recording of one subject, and the motion was gentle
-enough that POS was probably never seriously challenged. The controlled test is to record
-once while saving a region large enough for the face to move within, then process that
-single recording twice — static box versus dynamic tracking — so that the crop strategy is
-the only variable.
+| Condition | motion dose | max displacement | PHASE-Net drift | POS drift |
+|-----------|------------|-----------------|----------------|-----------|
+| `still` (control) | −0.05 | 8 px | **8.0** | **6.8** |
+| `talk` | 0.29 | 9 px | 7.8 | 5.9 |
+| `full` | 0.55 | 28 px | 10.5 | 13.7 |
+| `slow` head turns | 1.04 | 48 px | 15.5 | 12.9 |
+| `fast` head turns | 2.88 | 37 px | 15.4 | 14.1 |
+
+Correlation between measured motion and drift: **+0.81** for PHASE-Net, **+0.68** for POS.
+Motion genuinely drives the error — but not by the mechanism first assumed.
+
+### Three hypotheses, all rejected
+
+**1. "The face leaves the static crop."** Tested directly by `14_static_vs_dynamic.py`,
+which processes one recording twice — fixed box versus re-detecting the face every second
+— so the crop strategy is the only variable. The face never moved more than **21 % of a
+face width**, never left the box, and the correlation between displacement and error was
+**+0.07**, i.e. none. Dynamic tracking made things *worse* (drift 24.6 versus 10.5) because
+the re-detected box jitters frame to frame and injects artificial motion; it was unstable
+even during the still phases. **A slightly misaligned but stable crop beats a
+well-centred jittery one.**
+
+**2. "Facial appearance change breaks it."** The `talk` condition moves the face 9 px
+while changing its appearance continuously. Its drift (7.8) is indistinguishable from the
+still control (8.0). Speech costs nothing.
+
+**3. "One method is inherently more motion-robust."** Both degrade by roughly the same
+factor — PHASE-Net 8.0 → 15.5, POS 6.8 → 14.1 — and the curve saturates: tripling the
+motion from `slow` to `fast` changes nothing (15.5 → 15.4).
+
+### What the protocol did establish
+
+**The noise floor is 7–8 BPM.** Sitting perfectly still, both methods wander by that much;
+in the `still` recording PHASE-Net ranged over 68–108 BPM with no movement at all. Motion
+roughly doubles this, to 13–15 BPM, and then plateaus.
+
+**PHASE-Net's absolute reading is far more consistent than POS's.** Across the five
+recordings, baseline offsets from the smartwatch reference (83 BPM):
+
+| | offsets | spread |
+|---|---------|--------|
+| PHASE-Net | −3.0, −0.6, −4.3, −3.4, −1.9 | **3.7 BPM** |
+| POS | −3.4, −16.8, −4.6, −5.8, −12.4 | 13.4 BPM |
+
+PHASE-Net stays within about 4 BPM of the reference every time; POS is occasionally wrong
+by 17. This is the same conclusion the UBFC comparison reached — the deep model's value is
+bounded error, not a better average — now reproduced on independently recorded data.
+
+### The finding that reframes the project
+
+```
+UBFC-rPPG, clean data           PHASE-Net  0.39 BPM
+this webcam, sitting perfectly still       8.0  BPM
+```
+
+**A twenty-fold gap, before any movement is involved.** Several experiments went into
+asking why performance collapses under motion, when the honest answer is that it is
+already twenty times worse than the model's demonstrated capability while sitting still.
+Motion merely doubles an already poor number.
+
+The bottleneck is therefore **capture quality — lighting, camera, distance, face size in
+frame — not motion robustness and not the model.** UBFC videos are recorded under
+controlled illumination with the face filling much of the frame; this webcam setup is not.
+Improving the recording conditions, and measuring the effect on the noise floor, should
+come before any further work on motion.
 
 ## Earlier verification steps
 
@@ -481,8 +544,10 @@ states "we set the default depth to 3", but the released checkpoint contains
 | Windowed evaluation protocol | ✅ Done — the subject47 failure was a protocol artefact |
 | JSON results export for the dashboard | ✅ Done |
 | **Comparison against the POS baseline** | ✅ **Done — same crops, same protocol** |
-| **Motion test (still / motion / still)** | ✅ Recorded and analysed — result was unexpected |
-| Static vs dynamic face box, controlled test | ⏳ Next — to explain the motion result |
+| **Motion test (still / motion / still)** | ✅ Recorded and analysed |
+| **Static vs dynamic face box, controlled test** | ✅ Done — the static box was **not** the cause |
+| **Controlled motion protocol (5 conditions)** | ✅ Done — noise floor 7-8 BPM even at rest |
+| Improve capture quality and re-measure the noise floor | ⏳ Next, and now the priority |
 | Remaining 6 test-split subjects | ⏳ Videos not yet downloaded |
 | Training / fine-tuning | ❌ Not feasible on 4 GB VRAM (use Kaggle/Colab) |
 
@@ -515,13 +580,15 @@ states "we set the default depth to 3", but the released checkpoint contains
 
 ## Roadmap
 
-- **Verify the static-face-box hypothesis.** Record once while saving a region
-  large enough for the face to move within, then process that single recording
-  twice — fixed crop versus dynamic tracking — so the crop strategy is the only
-  variable. Track face displacement over time and check whether it coincides with
-  the PHASE-Net spikes.
-- **If confirmed, add dynamic face tracking** and repeat the motion test. This is
-  probably the single most important change for the KEIKO scenario.
+- **Improve capture quality and re-measure the noise floor.** This is now the
+  priority: 8 BPM of drift while sitting perfectly still dwarfs anything motion
+  adds. Controlled lighting, a shorter subject-to-camera distance so the face
+  fills more of the frame, and a re-run of the `still` control to quantify the
+  gain.
+- **Explain the between-recording variability.** The `full` recording held a
+  still-phase standard deviation of 1.81 BPM while `still` and `fast` reached
+  13.60 under the same instruction. Whatever differs between those sessions is
+  currently as large as the effect being measured.
 - **Complete the paper's test split** (subject41, 42, 43, 45, 8, 9) for a
   like-for-like comparison against the reported 0.15 BPM.
 - **A results dashboard** reading `results/*.json`: Bland-Altman, error vs SNR,

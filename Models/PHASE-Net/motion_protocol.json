@@ -1,0 +1,191 @@
+{
+  "watch_bpm": 83.0,
+  "window_s": 10.0,
+  "records": [
+    {
+      "label": "still",
+      "file": "motion_still.npz",
+      "fps": 30.039903745867395,
+      "frames": 1815,
+      "bounds": [
+        0.0,
+        20.0,
+        40.0,
+        60.0
+      ],
+      "appearance_still": 1.0182859618738416,
+      "appearance_motion": 0.9637812711236481,
+      "displacement_motion_max": 7.72440277359673,
+      "face_width": 128.0,
+      "methods": {
+        "PHASE-Net": {
+          "baseline_hr": 79.97684334684668,
+          "condition_hr": 77.00658919228704,
+          "drift": 8.014185746654444,
+          "still_sd": 13.595948137796896,
+          "condition_sd": 9.410667140042493,
+          "condition_min": 68.31584555487179,
+          "condition_max": 107.58920604293817
+        },
+        "POS": {
+          "baseline_hr": 79.59181040088524,
+          "condition_hr": 74.69639151651842,
+          "drift": 6.842585496800356,
+          "still_sd": 9.180479592718706,
+          "condition_sd": 7.2843091350802895,
+          "condition_min": 51.92444299822783,
+          "condition_max": 79.64681510745116
+        }
+      },
+      "motion_dose": -0.054504690750193485
+    },
+    {
+      "label": "talk",
+      "file": "motion_talk.npz",
+      "fps": 30.017817334713392,
+      "frames": 1813,
+      "bounds": [
+        0.0,
+        20.0,
+        40.0,
+        60.0
+      ],
+      "appearance_still": 1.064401868215856,
+      "appearance_motion": 1.3504859754774305,
+      "displacement_motion_max": 8.786899480418173,
+      "face_width": 128.0,
+      "methods": {
+        "PHASE-Net": {
+          "baseline_hr": 82.44639770886856,
+          "condition_hr": 81.5120052015014,
+          "drift": 7.82965956908555,
+          "still_sd": 10.810467861668322,
+          "condition_sd": 9.045718365140992,
+          "condition_min": 73.65211528658925,
+          "condition_max": 98.49596312952832
+        },
+        "POS": {
+          "baseline_hr": 66.17697522765184,
+          "condition_hr": 67.33122479557599,
+          "drift": 5.8564424505866315,
+          "still_sd": 11.745654070947433,
+          "condition_sd": 8.539118727515831,
+          "condition_min": 50.347266867549074,
+          "condition_max": 98.16617753869285
+        }
+      },
+      "motion_dose": 0.2860841072615745
+    },
+    {
+      "label": "full",
+      "file": "motion_full.npz",
+      "fps": 30.02973737757013,
+      "frames": 2715,
+      "bounds": [
+        0.0,
+        30.0,
+        60.0,
+        90.0
+      ],
+      "appearance_still": 1.8406565987595034,
+      "appearance_motion": 2.3913100705162664,
+      "displacement_motion_max": 28.460241267856265,
+      "face_width": 131.33085501858736,
+      "methods": {
+        "PHASE-Net": {
+          "baseline_hr": 78.68509677850864,
+          "condition_hr": 81.26944307381955,
+          "drift": 10.526170761681236,
+          "still_sd": 1.8121868222216382,
+          "condition_sd": 13.831898562683183,
+          "condition_min": 78.1902219560023,
+          "condition_max": 115.03090318703012
+        },
+        "POS": {
+          "baseline_hr": 78.35518023017109,
+          "condition_hr": 62.68414418413687,
+          "drift": 13.695202495434819,
+          "still_sd": 5.957189910227011,
+          "condition_sd": 11.872057703682342,
+          "condition_min": 45.088594939466866,
+          "condition_max": 88.19769058890836
+        }
+      },
+      "motion_dose": 0.550653471756763
+    },
+    {
+      "label": "slow",
+      "file": "motion_slow.npz",
+      "fps": 30.05054838924253,
+      "frames": 1815,
+      "bounds": [
+        0.0,
+        20.0,
+        40.0,
+        60.0
+      ],
+      "appearance_still": 1.0122662899848984,
+      "appearance_motion": 2.047414296214209,
+      "displacement_motion_max": 48.371484332698316,
+      "face_width": 128.0,
+      "methods": {
+        "PHASE-Net": {
+          "baseline_hr": 79.56498957063849,
+          "condition_hr": 95.79712783020858,
+          "drift": 15.522326111948221,
+          "still_sd": 5.8212992272647694,
+          "condition_sd": 6.519378285013023,
+          "condition_min": 80.00518315055903,
+          "condition_max": 103.77563646626845
+        },
+        "POS": {
+          "baseline_hr": 77.19894907856556,
+          "condition_hr": 65.20367402573072,
+          "drift": 12.870159792926932,
+          "still_sd": 6.832296839273483,
+          "condition_sd": 9.746069628959546,
+          "condition_min": 49.5217777410613,
+          "condition_max": 101.79476535662602
+        }
+      },
+      "motion_dose": 1.0351480062293106
+    },
+    {
+      "label": "fast",
+      "file": "motion_fast.npz",
+      "fps": 30.02443655086874,
+      "frames": 1814,
+      "bounds": [
+        0.0,
+        20.0,
+        40.0,
+        60.0
+      ],
+      "appearance_still": 1.076215514633958,
+      "appearance_motion": 3.959332275390625,
+      "displacement_motion_max": 36.650493891687766,
+      "face_width": 128.0,
+      "methods": {
+        "PHASE-Net": {
+          "baseline_hr": 81.14514468215746,
+          "condition_hr": 72.01906472467905,
+          "drift": 15.420876072727077,
+          "still_sd": 13.596365394824122,
+          "condition_sd": 16.375296612430386,
+          "condition_min": 54.426621433154395,
+          "condition_max": 108.74329009573675
+        },
+        "POS": {
+          "baseline_hr": 70.58967870724267,
+          "condition_hr": 63.77260693177688,
+          "drift": 14.06295935616252,
+          "still_sd": 13.089511694856643,
+          "condition_sd": 15.641824101444259,
+          "condition_min": 45.85030532853613,
+          "condition_max": 100.05702122054647
+        }
+      },
+      "motion_dose": 2.883116760756667
+    }
+  ]
+}

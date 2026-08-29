@@ -19,5 +19,6 @@ waveform_*.png
 windows_*.csv
 faces_*.npy
 
-# Raw webcam recordings - large, and re-recordable
-motion_test*.npz
+# Raw webcam recordings - hundreds of MB each, and re-recordable.
+# The derived results (JSON, PNG) are versioned; the raw frames are not.
+motion_*.npz
