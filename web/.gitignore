@@ -1,0 +1,14 @@
+# Dependencies and build output
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Copied from ../results by scripts/sync-data.mjs before every dev run and build.
+# The originals are versioned; these duplicates are not.
+public/data/
+
+# Local environment
+.env*.local
+.DS_Store

@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-bg text-ink antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  h1 {
+    @apply text-2xl font-semibold tracking-tight text-ink;
+  }
+  h2 {
+    @apply text-lg font-semibold tracking-tight text-ink;
+  }
+  h3 {
+    @apply text-sm font-semibold text-ink;
+  }
+  /* Columns of numbers only line up with tabular figures. */
+  .num {
+    @apply font-mono tabular-nums;
+  }
+  ::selection {
+    @apply bg-phase/25;
+  }
+}
+
+@layer components {
+  /* Thin scrollbars so wide tables do not gain a chunky grey bar. */
+  .scroll-slim::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+  .scroll-slim::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-line-bright;
+  }
+  .scroll-slim::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+}
