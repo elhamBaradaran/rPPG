@@ -8,7 +8,10 @@ export { fmt, PALETTE, methodColour } from "./format";
 // disk during the build rather than fetched by the browser. Waveforms stay separate and
 // are fetched on demand - all fifteen together are larger than the rest of the payload.
 
-const BASE = process.env.BASE_PATH || "";
+// Must carry the NEXT_PUBLIC_ prefix: only those variables are inlined into the browser
+// bundle at build time. A plain process.env.BASE_PATH reads as undefined in client code,
+// which would silently break waveform fetches when the site is served from a sub-path.
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 export async function getDashboard(): Promise<Dashboard> {
   const fs = await import("node:fs/promises");
